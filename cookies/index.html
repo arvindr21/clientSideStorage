@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auto Save Form</title>
+    <!-- Bootstrap CSS -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+</head>
+
+<body>
+    <h1 class="text-center">Auto Save a Long Form!</h1>
+    <div class="container col-md-6 col-md-offset-3">
+        <form action="" method="POST" role="form" name="longForm">
+            <legend>Field 1</legend>
+            <div class="form-group">
+                <label for="">label 1</label>
+                <input type="text" class="form-control" id="fld1" name="fld1" placeholder="Input field 1">
+            </div>
+            <legend>Field 2</legend>
+            <div class="form-group">
+                <label for="">label 2</label>
+                <input type="text" class="form-control" id="fld2" name="fld2" placeholder="Input field 2">
+            </div>
+            <br>
+            <legend>And some more fields...</legend>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+    <!-- jQuery -->
+    <script src="//code.jquery.com/jquery.js"></script>
+    <script>
+    // No direct support for cookies in jQuery :/
+    // So building a wrapper
+
+    // http://stackoverflow.com/a/24103596/1015046
+    var cookieAPI = {
+        createCookie: function(name, value, days) {
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                var expires = "; expires=" + date.toGMTString();
+            } else var expires = "";
+            document.cookie = name + "=" + value + expires + "; path=/";
+        },
+
+        readCookie: function(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        },
+
+        eraseCookie: function(name) {
+            // http://www.sitepoint.com/3-things-about-cookies-you-may-not-know/
+            this.createCookie(name, "", -1);
+        }
+
+    };
+
+    $(document).ready(function() {
+
+        var cookieName = 'longForm';
+
+        // on blur of any form field, save the form data to cookie
+        $('.form-control').on('blur', function() {
+            // this can be cleaned up better to save 
+            // only the relevant form data
+            // I am saving the entire form data for simplicity
+
+            cookieAPI.createCookie(cookieName, $('form').serialize(), 7);
+
+
+        });
+
+
+        // populate existing form data
+        var fData = cookieAPI.readCookie(cookieName);
+        if (fData) {
+            var formFields = fData.split('&');
+
+            for (var i = 0; i < formFields.length; i++) {
+                var _d = formFields[i].split('=');
+                // you can avoid the below vars and directly work with
+                // line 102
+                var formEle = _d[0];
+                var formEleVal = _d[1];
+                $('[name=' + formEle + ']').val(formEleVal);
+            };
+        }
+
+        // delete the cookie if the form is "successfully submit"
+
+        $('form').submit(function(e) {
+            e.preventDefault();
+
+            // AJAX Call to server..
+
+            // Success
+            cookieAPI.eraseCookie(cookieName);
+
+        });
+
+    });
+    </script>
+</body>
+
+</html>

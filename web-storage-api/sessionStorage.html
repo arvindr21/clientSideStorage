@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auto Save Form</title>
+    <!-- Bootstrap CSS -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+</head>
+
+<body>
+    <h1 class="text-center">Auto Save a Long Form!</h1>
+    <hr>
+    <h3 class="text-center">Using Session Storage</h3>
+    <div class="container col-md-6 col-md-offset-3">
+        <form action="" method="POST" role="form" name="longForm">
+            <legend>Field 1</legend>
+            <div class="form-group">
+                <label for="">label 1</label>
+                <input type="text" class="form-control" id="fld1" name="fld1" placeholder="Input field 1">
+            </div>
+            <legend>Field 2</legend>
+            <div class="form-group">
+                <label for="">label 2</label>
+                <input type="text" class="form-control" id="fld2" name="fld2" placeholder="Input field 2">
+            </div>
+            <br>
+            <legend>And some more fields...</legend>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+    <!-- jQuery -->
+    <script src="//code.jquery.com/jquery.js"></script>
+    <script>
+    var sessionStorageAPI = {
+
+        // This method may not be needed as we go along
+        // the support is becoming better and better day-by-day
+        // http://caniuse.com/#feat=namevalue-storage
+
+        // better to be safe than sorry or get script errors :|
+        isSupported: function() {
+            return window.sessionStorage;
+        },
+
+        setItem: function(key, value) {
+            return sessionStorage.setItem(key, value);
+        },
+
+        getItem: function(key) {
+            return sessionStorage.getItem(key);
+        },
+
+        // If do not want to build a wrapper like how I did here but implement 
+        // setObject() and getObject(), you can create prototype methods on  
+        // Storage
+
+        // Storing Objects in HTML5 localStorage : http://stackoverflow.com/a/3146971/1015046 
+
+        setObject: function(key, object) {
+            return sessionStorage.setItem(key, JSON.stringify(object));
+        },
+
+        getObject: function(key) {
+            return JSON.parse(sessionStorage.getItem(key));
+        },
+
+        removeItem: function(key) {
+            return sessionStorage.removeItem(key);
+        },
+
+        clearAll: function() {
+            return sessionStorage.clear();
+        }
+
+    };
+
+    $(document).ready(function() {
+
+        // Check sessionStorage support
+        if (sessionStorageAPI.isSupported()) {
+            var key = 'longForm';
+
+            // on blur of any form field, save the form data to session storage
+            $('.form-control').on('blur', function() {
+                // this can be cleaned up better to save 
+                // only the relevant form data
+                // I am saving the entire form data for simplicity
+
+                // convert Form data to Object
+                // http://stackoverflow.com/a/17784656/1015046
+                var formObj = {};
+                $('form').serializeArray().map(function(x) {
+                    formObj[x.name] = x.value;
+                });
+
+                sessionStorageAPI.setObject(key, formObj);
+
+            });
+
+            // populate existing form data
+            var fData = sessionStorageAPI.getObject(key);
+            if (fData) {
+                $.each(fData, function(formEle, formEleVal) {
+                    $('[name=' + formEle + ']').val(formEleVal);
+                });
+            }
+
+            // delete the session storage key if the form is "successfully submit"
+            $('form').submit(function(e) {
+                e.preventDefault();
+
+                // AJAX Call to server..
+
+                // Success
+
+                sessionStorageAPI.removeItem(key);
+            });
+
+        } else {
+            alert('No Session Storage Support!');
+        }
+
+    });
+    </script>
+</body>
+
+</html>

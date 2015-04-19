@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Auto Save Form</title>
+    <!-- Bootstrap CSS -->
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+</head>
+
+<body>
+    <h1 class="text-center">Auto Save a Long Form!</h1>
+    <hr>
+    <h3 class="text-center">Using IndexedDB and Dexie.js</h3>
+    <div class="container col-md-6 col-md-offset-3">
+        <form action="" method="POST" role="form" name="longForm">
+            <legend>Field 1</legend>
+            <div class="form-group">
+                <label for="">label 1</label>
+                <input type="text" class="form-control" id="fld1" name="fld1" placeholder="Input field 1">
+            </div>
+            <legend>Field 2</legend>
+            <div class="form-group">
+                <label for="">label 2</label>
+                <input type="text" class="form-control" id="fld2" name="fld2" placeholder="Input field 2">
+            </div>
+            <br>
+            <legend>And some more fields...</legend>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+    <!-- jQuery -->
+    <script src="//code.jquery.com/jquery.js"></script>
+    <!-- Dexie -->
+    <script type="text/javascript" src="dexie.min.js"></script>
+    <script>
+    $(document).ready(function() {
+
+        var db = new Dexie('longForm');
+        db.version(1).stores({
+            mainForm: '++id'
+        });
+
+        db.open().then(function() {
+            // populate form
+            db.mainForm.toArray().then(function(fData) {
+                fData = fData[0];
+                $.each(fData, function(formEle, formEleVal) {
+                    $('[name=' + formEle + ']').val(formEleVal);
+                });
+            });
+
+        });
+
+        // on blur of any form field, save the form data to indexedDB
+        $('.form-control').on('blur', function() {
+            // this can be cleaned up better to save 
+            // only the relevant form data
+            // I am saving the entire form data for simplicity
+
+            // convert Form data to Object
+            // http://stackoverflow.com/a/17784656/1015046
+            var formObj = {};
+            $('form').serializeArray().map(function(x) {
+                formObj[x.name] = x.value;
+            });
+            // make sure that we save the form data only once
+            db.mainForm.clear().then(function() {
+                db.mainForm.put(formObj);
+            });
+
+        });
+
+        // delete the db if the form is "successfully submit"
+        $('form').submit(function(e) {
+            e.preventDefault();
+
+            // AJAX Call to server..
+
+            // Success
+            db.delete();
+
+        });
+
+    });
+    </script>
+</body>
+
+</html>
